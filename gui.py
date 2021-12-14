@@ -9,7 +9,10 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from pyfirmata import Arduino
+import time
 
+board = Arduino("COM5")
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -40,12 +43,12 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.pushButton_2.clicked.connect(lambda: self.click("Rotating ACW")) #buton2 yi click metoduna (slotuna) bağlıyoruz
-        self.pushButton.clicked.connect(lambda: self.click("Rotating CW")) #buton1 i click metoduna (slotuna) bağlıyoruz
+
+        self.pushButton.clicked.connect(self.click_cw) #buton1 i click metoduna (slotuna) bağlıyoruz
+        self.pushButton_2.clicked.connect(self.click_acw) #buton1 i click metoduna (slotuna) bağlıyoruz
+
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
     
-    
-
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
@@ -53,9 +56,14 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "Speed"))
         self.pushButton_2.setText(_translate("MainWindow", "Rotate Anti Clockwise"))
     
-    def click(self,text): #click metodu tanımlıyoruz. text bilgisini label a yazar size ını adjust eder.
-       self.label.setText(text)
-       self.label.adjustSize()
+    def click_cw(self): #click metodu tanımlıyoruz. text bilgisini label a yazar size ını adjust eder.
+       board.digital[13].write(1)
+
+    def click_acw(self): #click metodu tanımlıyoruz. text bilgisini label a yazar size ını adjust eder.
+       board.digital[13].write(0)
+       
+    #    self.label.setText(text)
+    #    self.label.adjustSize()
     
 
 
