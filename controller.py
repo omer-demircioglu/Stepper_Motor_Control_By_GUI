@@ -20,5 +20,3 @@ uygulama = QApplication([])
 pencere = dersler_7()
 pencere.show()
 uygulama.exec_()
-
-

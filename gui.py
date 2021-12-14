@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'gui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
@@ -64,7 +63,7 @@ class Ui_MainWindow(object):
        
     #    self.label.setText(text)
     #    self.label.adjustSize()
-    
+
 
 
 if __name__ == "__main__":
