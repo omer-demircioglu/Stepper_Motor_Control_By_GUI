@@ -8,10 +8,19 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from pyfirmata import Arduino
+from PyQt5.QtCore import QThread
+from pyfirmata import Arduino, util
 import time
 
 board = Arduino("COM5")
+
+dirPin = board.digital[3]
+stepPin = board.digital[4]
+# stepPin = board.get_pin('d:13:i')
+
+# time.sleep(1)
+
+delay = 0
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -20,18 +29,26 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(70, 30, 121, 51))
+        self.pushButton.setGeometry(QtCore.QRect(60, 30, 130, 51))
         self.pushButton.setObjectName("pushButton")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(200, 90, 31, 41))
-        self.label.setObjectName("label")
+        # self.label = QtWidgets.QLabel(self.centralwidget)
+        # self.label.setGeometry(QtCore.QRect(200, 90, 50, 41))
+        # self.label.setObjectName("label")
         self.horizontalSlider = QtWidgets.QSlider(self.centralwidget)
-        self.horizontalSlider.setGeometry(QtCore.QRect(140, 150, 160, 16))
+        self.horizontalSlider.setGeometry(QtCore.QRect(70, 150, 320, 20))
+        self.horizontalSlider.setMinimum(1)
+        self.horizontalSlider.setMaximum(20)
+        self.horizontalSlider.setSingleStep(0.5)
         self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
         self.horizontalSlider.setObjectName("horizontalSlider")
+        self.horizontalSlider.setInvertedAppearance(True)
+        self.horizontalSlider.setInvertedControls(False)
         self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(250, 30, 121, 51))
+        self.pushButton_2.setGeometry(QtCore.QRect(210, 30, 190, 51))
         self.pushButton_2.setObjectName("pushButton_2")
+        self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_3.setGeometry(QtCore.QRect(180, 200, 75, 23))
+        self.pushButton_3.setObjectName("stop")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 468, 22))
@@ -45,26 +62,45 @@ class Ui_MainWindow(object):
 
         self.pushButton.clicked.connect(self.click_cw) #buton1 i click metoduna (slotuna) bağlıyoruz
         self.pushButton_2.clicked.connect(self.click_acw) #buton1 i click metoduna (slotuna) bağlıyoruz
+        self.horizontalSlider.valueChanged['int'].connect(self.slidervalue)
+        
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-    
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton.setText(_translate("MainWindow", "Rotate Clockwise"))
-        self.label.setText(_translate("MainWindow", "Speed"))
+        # self.label.setText(_translate("MainWindow", "Speed"))
         self.pushButton_2.setText(_translate("MainWindow", "Rotate Anti Clockwise"))
+        self.pushButton_3.setText(_translate("MainWindow", "Stop"))
+    def click_cw(self): #
+        dirPin.write(0)
+        self.worker = WorkerThread()
+        self.worker.start()
+
+    def click_acw(self): #
+        dirPin.write(1)
     
-    def click_cw(self): #click metodu tanımlıyoruz. text bilgisini label a yazar size ını adjust eder.
-       board.digital[13].write(1)
-
-    def click_acw(self): #click metodu tanımlıyoruz. text bilgisini label a yazar size ını adjust eder.
-       board.digital[13].write(0)
-       
-    #    self.label.setText(text)
-    #    self.label.adjustSize()
+    def slidervalue(self):
+        global delay
+        delay = self.horizontalSlider.value() / 1000
 
 
+class WorkerThread(QThread):
+    def run(self):
+        while dirPin.read() == 0:
+            board.pass_time(delay)
+            print(delay)
+            stepPin.write(1)
+            board.pass_time(delay)
+            stepPin.write(0)
+        while dirPin.read() == 1:
+            board.pass_time(delay)
+            stepPin.write(1)
+            board.pass_time(delay)
+            stepPin.write(0)
+    
 
 if __name__ == "__main__":
     import sys
@@ -74,3 +110,6 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+
+
+    
