@@ -21,6 +21,7 @@ stepPin = board.digital[4]
 # time.sleep(1)
 
 delay = 0
+stopclicked = False
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -63,7 +64,7 @@ class Ui_MainWindow(object):
         self.pushButton.clicked.connect(self.click_cw) #buton1 i click metoduna (slotuna) bağlıyoruz
         self.pushButton_2.clicked.connect(self.click_acw) #buton1 i click metoduna (slotuna) bağlıyoruz
         self.horizontalSlider.valueChanged['int'].connect(self.slidervalue)
-        
+        self.pushButton_3.clicked.connect(self.stop)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -74,6 +75,7 @@ class Ui_MainWindow(object):
         # self.label.setText(_translate("MainWindow", "Speed"))
         self.pushButton_2.setText(_translate("MainWindow", "Rotate Anti Clockwise"))
         self.pushButton_3.setText(_translate("MainWindow", "Stop"))
+
     def click_cw(self): #
         dirPin.write(0)
         self.worker = WorkerThread()
@@ -81,21 +83,27 @@ class Ui_MainWindow(object):
 
     def click_acw(self): #
         dirPin.write(1)
-    
+        self.worker = WorkerThread()
+        self.worker.start()
+
+    def stop(self):
+        global stopclicked
+        stopclicked = True
+        time.sleep(1)
+        stopclicked = False
+
     def slidervalue(self):
         global delay
         delay = self.horizontalSlider.value() / 1000
 
-
 class WorkerThread(QThread):
     def run(self):
-        while dirPin.read() == 0:
+        while dirPin.read() == 0 and stopclicked != True:
             board.pass_time(delay)
-            print(delay)
             stepPin.write(1)
             board.pass_time(delay)
             stepPin.write(0)
-        while dirPin.read() == 1:
+        while dirPin.read() == 1 and stopclicked != True:
             board.pass_time(delay)
             stepPin.write(1)
             board.pass_time(delay)
